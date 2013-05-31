@@ -4,6 +4,8 @@
  */
 package edu.unal.arqsoft.ejbsample.counter;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Singleton;
 import javax.interceptor.Interceptor;
 import javax.interceptor.Interceptors;
@@ -25,11 +27,38 @@ public class SingletonCounterBean implements SingletonCounterBeanLocal, Singleto
     @Override
     public int increment() {
         int result = 0;
+        try {
+            JPACounterEntity counter = em.find(JPACounterEntity.class, CounterDBKey);
+            if (counter == null) {
+                counter = new JPACounterEntity();
+                counter.setPrimaryKey(CounterDBKey);
+                em.persist(counter);
+            }
+            counter.setValue(counter.getValue() + 1);
+            em.flush();
+            em.clear();
+            result = counter.getValue();
+        } catch (Throwable t) {
+            Logger.getLogger(SingletonCounterBean.class.getName()).log(Level.SEVERE, null, t);
+        }
         return result;
     }
 
     @Override
     public int getTheValue() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int result = 0;
+        try {
+            JPACounterEntity counter = em.find(JPACounterEntity.class, CounterDBKey);
+            if (counter == null) {
+                counter = new JPACounterEntity();
+                em.persist(counter);
+                em.flush();
+            }
+            em.clear();
+            result = counter.getValue();
+        } catch (Throwable t) {
+            Logger.getLogger(SingletonCounterBean.class.getName()).log(Level.SEVERE, null, t);
+        }
+        return result;
     }
 }
